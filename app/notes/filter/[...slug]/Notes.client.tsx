@@ -43,7 +43,7 @@ export default function NotesClient({ initialTag }: { initialTag: string }) {
         )}
 
         <button
-          className={css.createButton}
+          className={css.button}
           onClick={() => setIsModalOpen(true)}
           type="button">
           Create note +
