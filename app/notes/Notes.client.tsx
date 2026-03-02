@@ -9,16 +9,20 @@ import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
 import Modal from "@/components/Modal/Modal";
 import NoteForm from "@/components/NoteForm/NoteForm";
-import css from "./Notes.module.css";
+import css from "./NotesClient.module.css";
 
-export default function NotesClient() {
+interface Props {
+  tag?: string;
+}
+
+export default function NotesClient({ tag }: Props) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["notes", page, search],
-    queryFn: () => fetchNotes(page, search),
+    queryKey: ["notes", page, search, tag],
+    queryFn: () => fetchNotes(page, search, tag),
     placeholderData: keepPreviousData,
   });
 
@@ -30,7 +34,8 @@ export default function NotesClient() {
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        <SearchBox onChange={(value) => handleSearch(value)} />{" "}
+        <SearchBox onChange={(value) => handleSearch(value)} />
+
         {data && data.totalPages > 1 && (
           <Pagination
             currentPage={page}
@@ -38,6 +43,7 @@ export default function NotesClient() {
             onPageChange={setPage}
           />
         )}
+
         <button
           className={css.createButton}
           onClick={() => setIsModalOpen(true)}
