@@ -1,15 +1,13 @@
-import NotesClient from "@/components/NotesClient/NotesClient";
+import NotesClient from "./Notes.client";
 
-interface Props {
-  params: {
-    slug?: string[];
-  };
-}
+type PageProps = {
+  params: Promise<{ slug?: string[] }>;
+};
 
-export default function FilterPage({ params }: Props) {
-  const tag = params.slug?.[0];
+export default async function FilterPage({ params }: PageProps) {
+  const { slug } = await params;
 
-  const normalizedTag = tag === "all" ? undefined : tag;
+  const tagFromUrl = slug?.[0] ?? "all";
 
-  return <NotesClient tag={normalizedTag} />;
+  return <NotesClient initialTag={tagFromUrl} />;
 }

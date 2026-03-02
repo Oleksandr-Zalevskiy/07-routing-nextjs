@@ -1,72 +1,55 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { useDebouncedCallback } from "use-debounce";
-import { fetchNotes } from "@/lib/api";
-import NoteList from "@/components/NoteList/NoteList";
-import SearchBox from "@/components/SearchBox/SearchBox";
-import Pagination from "@/components/Pagination/Pagination";
+import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { fetchNoteById } from "@/lib/api";
 import Modal from "@/components/Modal/Modal";
-import NoteForm from "@/components/NoteForm/NoteForm";
-import css from "./NotesClient.module.css";
+import css from "./NotePreview.client.module.css";
 
-interface Props {
-  tag?: string;
+interface NotePreviewClientProps {
+  id: string;
 }
 
-export default function NotesClient({ tag }: Props) {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export default function NotePreviewClient({ id }: NotePreviewClientProps) {
+  const router = useRouter();
+  const handleClose = () => router.back();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["notes", page, search, tag],
-    queryFn: () => fetchNotes(page, search, tag),
-    placeholderData: keepPreviousData,
+  const {
+    data: note,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["note", id],
+    queryFn: () => fetchNoteById(id),
+
+    refetchOnMount: false,
   });
 
-  const handleSearch = useDebouncedCallback((value: string) => {
-    setSearch(value);
-    setPage(1);
-  }, 500);
-
   return (
-    <div className={css.app}>
-      <header className={css.toolbar}>
-        <SearchBox onChange={(value) => handleSearch(value)} />
+    <Modal onClose={handleClose}>
+      <div className={css.container}>
+        {isLoading && <div className={css.loading}>Loading...</div>}
 
-        {data && data.totalPages > 1 && (
-          <Pagination
-            currentPage={page}
-            totalPages={data.totalPages}
-            onPageChange={setPage}
-          />
+        {isError && <div className={css.error}>Failed to load note data.</div>}
+
+        {note && (
+          <div className={css.item}>
+            <div className={css.header}>
+              <h2 className={css.title}>{note.title}</h2>
+              <button className={css.backBtn} onClick={handleClose}>
+                Close
+              </button>
+            </div>
+            <div className={css.content}>{note.content}</div>
+            <div className={css.footer}>
+              <div className={css.tag}>{note.tag}</div>
+              <div className={css.date}>
+                {new Date(note.createdAt).toLocaleDateString()}
+              </div>
+            </div>
+          </div>
         )}
-
-        <button
-          className={css.createButton}
-          onClick={() => setIsModalOpen(true)}
-          type="button">
-          Create note +
-        </button>
-      </header>
-
-      <main>
-        {isLoading ? (
-          <p className={css.statusMessage}>Loading notes...</p>
-        ) : data && data.notes.length > 0 ? (
-          <NoteList notes={data.notes} />
-        ) : (
-          <p className={css.statusMessage}>No notes found</p>
-        )}
-      </main>
-
-      {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm onClose={() => setIsModalOpen(false)} />
-        </Modal>
-      )}
-    </div>
+      </div>
+    </Modal>
   );
 }
