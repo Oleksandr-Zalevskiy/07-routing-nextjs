@@ -24,16 +24,17 @@ export interface FetchNotesResponse {
 export const fetchNotes = async (
   page: number,
   search: string,
+  tag?: string,
 ): Promise<FetchNotesResponse> => {
   const { data } = await instance.get<FetchNotesResponse>("/notes", {
-    params: { page, search, perPage: 12 },
+    params: {
+      page,
+      search,
+      perPage: 12,
+      ...(tag ? { tag } : {}),
+    },
   });
 
-  return data;
-};
-
-export const fetchNoteById = async (id: string): Promise<Note> => {
-  const { data } = await instance.get<Note>(`/notes/${id}`);
   return data;
 };
 
